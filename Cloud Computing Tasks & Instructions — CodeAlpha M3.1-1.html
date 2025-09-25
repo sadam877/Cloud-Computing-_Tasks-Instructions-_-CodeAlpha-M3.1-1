@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Validation System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c 0%, #2a5298 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .header h1 {
+            color: #2a5298;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .content {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .panel {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .panel h2 {
+            color: #2a5298;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+        
+        .panel h2 i {
+            margin-right: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        button {
+            padding: 12px 20px;
+            background: #2a5298;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        button i {
+            margin-right: 8px;
+        }
+        
+        button:hover {
+            background: #1a2a6c;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .data-table th, .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .data-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .data-table tr:hover {
+            background-color: #f5f7ff;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .status.unique {
+            background-color: #e6f7ee;
+            color: #00a65a;
+        }
+        
+        .status.duplicate {
+            background-color: #fcebea;
+            color: #e74c3c;
+        }
+        
+        .status.false-positive {
+            background-color: #fef5ec;
+            color: #f39c12;
+        }
+        
+        .logs {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        .log-entry {
+            margin-bottom: 8px;
+            padding-left: 10px;
+            border-left: 3px solid;
+        }
+        
+        .log-entry.info {
+            border-color: #3498db;
+        }
+        
+        .log-entry.success {
+            border-color: #2ecc71;
+        }
+        
+        .log-entry.warning {
+            border-color: #f39c12;
+        }
+        
+        .log-entry.error {
+            border-color: #e74c3c;
+        }
+        
+        .statistics {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+        
+        .stat-box {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            margin: 0 5px;
+        }
+        
+        .stat-box h3 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .stat-box p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            .statistics {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .stat-box {
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-database"></i> Data Validation System</h1>
+            <p>This system identifies and classifies data as redundant or false positive, validates new entries, and prevents duplicate data from being added to the database.</p>
+        </div>
+        
+        <div class="content">
+            <div class="panel">
+                <h2><i class="fas fa-plus-circle"></i> Add New Data Entry</h2>
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" placeholder="Enter name">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="Enter email">
+                </div>
+                <div class="form-group">
+                    <label for="department">Department</label>
+                    <select id="department">
+                        <option value="">Select Department</option>
+                        <option value="HR">Human Resources</option>
+                        <option value="IT">Information Technology</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Operations">Operations</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="role">Role</label>
+                    <input type="text" id="role" placeholder="Enter role">
+                </div>
+                <button id="add-btn"><i class="fas fa-plus"></i> Add Entry</button>
+                
+                <div class="statistics">
+                    <div class="stat-box">
+                        <h3 id="total-entries">0</h3>
+                        <p>Total Entries</p>
+                    </div>
+                    <div class="stat-box">
+                        <h3 id="unique-entries">0</h3>
+                        <p>Unique Entries</p>
+                    </div>
+                    <div class="stat-box">
+                        <h3 id="duplicate-entries">0</h3>
+                        <p>Duplicates Blocked</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h2><i class="fas fa-table"></i> Database Entries</h2>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Department</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data-body">
+                            <!-- Data will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <h2 style="margin-top: 20px;"><i class="fas fa-list"></i> System Logs</h2>
+                <div class="logs" id="logs">
+                    <div class="log-entry info">System initialized. Ready to accept data entries.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Database simulation
+        let database = [];
+        let duplicateCount = 0;
+        
+        // DOM elements
+        const addBtn = document.getElementById('add-btn');
+        const dataBody = document.getElementById('data-body');
+        const logsContainer = document.getElementById('logs');
+        const totalEntriesEl = document.getElementById('total-entries');
+        const uniqueEntriesEl = document.getElementById('unique-entries');
+        const duplicateEntriesEl = document.getElementById('duplicate-entries');
+        
+        // Initial examples
+        const initialData = [
+            { name: 'John Doe', email: 'john.doe@example.com', department: 'IT', role: 'Developer', status: 'unique' },
+            { name: 'Jane Smith', email: 'jane.smith@example.com', department: 'Marketing', role: 'Manager', status: 'unique' },
+            { name: 'Robert Johnson', email: 'robert.j@example.com', department: 'Finance', role: 'Analyst', status: 'unique' }
+        ];
+        
+        // Initialize with sample data
+        initialData.forEach(entry => {
+            database.push(entry);
+            addTableRow(entry);
+        });
+        updateStatistics();
+        
+        // Add event listener to button
+        addBtn.addEventListener('click', addDataEntry);
+        
+        // Function to add a new data entry
+        function addDataEntry() {
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const department = document.getElementById('department').value;
+            const role = document.getElementById('role').value.trim();
+            
+            // Basic validation
+            if (!name || !email || !department || !role) {
+                addLog('Please fill in all fields.', 'error');
+                return;
+            }
+            
+            // Email validation
+            if (!isValidEmail(email)) {
+                addLog('Invalid email format.', 'error');
+                return;
+            }
+            
+            // Check for duplicates and false positives
+            const validationResult = validateEntry(name, email, department, role);
+            
+            if (validationResult.status === 'duplicate') {
+                addLog(`Duplicate entry detected for "${email}". Entry not added.`, 'warning');
+                duplicateCount++;
+                updateStatistics();
+                return;
+            }
+            
+            if (validationResult.status === 'false-positive') {
+                addLog(`Possible duplicate detected for "${email}". Manual verification may be needed.`, 'warning');
+            }
+            
+            // Add to database
+            const newEntry = {
+                name,
+                email,
+                department,
+                role,
+                status: validationResult.status
+            };
+            
+            database.push(newEntry);
+            addTableRow(newEntry);
+            addLog(`Added new entry: ${name} (${email})`, 'success');
+            updateStatistics();
+            
+            // Clear form
+            document.getElementById('name').value = '';
+            document.getElementById('email').value = '';
+            document.getElementById('department').value = '';
+            document.getElementById('role').value = '';
+        }
+        
+        // Function to validate an entry
+        function validateEntry(name, email, department, role) {
+            // Check for exact duplicates
+            const exactDuplicate = database.find(entry => 
+                entry.email.toLowerCase() === email.toLowerCase()
+            );
+            
+            if (exactDuplicate) {
+                return { status: 'duplicate', reason: 'Exact email match' };
+            }
+            
+            // Check for similar entries (false positives)
+            const similarEntry = database.find(entry => {
+                const nameSimilarity = calculateSimilarity(entry.name.toLowerCase(), name.toLowerCase());
+                const emailSimilarity = calculateSimilarity(entry.email.toLowerCase(), email.toLowerCase());
+                
+                return nameSimilarity > 0.8 || emailSimilarity > 0.8;
+            });
+            
+            if (similarEntry) {
+                return { status: 'false-positive', reason: 'Similar entry exists' };
+            }
+            
+            // Check for same person in different departments
+            const samePerson = database.find(entry => 
+                entry.name.toLowerCase() === name.toLowerCase() && 
+                entry.department !== department
+            );
+            
+            if (samePerson) {
+                return { status: 'false-positive', reason: 'Same person in different department' };
+            }
+            
+            // If all checks pass
+            return { status: 'unique', reason: 'New unique entry' };
+        }
+        
+        // Helper function to calculate similarity between two strings
+        function calculateSimilarity(s1, s2) {
+            let longer = s1;
+            let shorter = s2;
+            
+            if (s1.length < s2.length) {
+                longer = s2;
+                shorter = s1;
+            }
+            
+            const longerLength = longer.length;
+            if (longerLength === 0) {
+                return 1.0;
+            }
+            
+            return (longerLength - editDistance(longer, shorter)) / parseFloat(longerLength);
+        }
+        
+        // Helper function for edit distance
+        function editDistance(s1, s2) {
+            s1 = s1.toLowerCase();
+            s2 = s2.toLowerCase();
+            
+            const costs = [];
+            for (let i = 0; i <= s1.length; i++) {
+                let lastValue = i;
+                for (let j = 0; j <= s2.length; j++) {
+                    if (i === 0) {
+                        costs[j] = j;
+                    } else if (j > 0) {
+                        let newValue = costs[j - 1];
+                        if (s1.charAt(i - 1) !== s2.charAt(j - 1)) {
+                            newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
+                        }
+                        costs[j - 1] = lastValue;
+                        lastValue = newValue;
+                    }
+                }
+                if (i > 0) {
+                    costs[s2.length] = lastValue;
+                }
+            }
+            return costs[s2.length];
+        }
+        
+        // Function to validate email format
+        function isValidEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+        
+        // Function to add a table row
+        function addTableRow(entry) {
+            const row = document.createElement('tr');
+            
+            row.innerHTML = `
+                <td>${entry.name}</td>
+                <td>${entry.email}</td>
+                <td>${entry.department}</td>
+                <td>${entry.role}</td>
+                <td><span class="status ${entry.status}">${entry.status}</span></td>
+            `;
+            
+            dataBody.appendChild(row);
+        }
+        
+        // Function to add a log entry
+        function addLog(message, type) {
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            
+            logsContainer.appendChild(logEntry);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+        }
+        
+        // Function to update statistics
+        function updateStatistics() {
+            totalEntriesEl.textContent = database.length;
+            uniqueEntriesEl.textContent = database.filter(entry => entry.status === 'unique').length;
+            duplicateEntriesEl.textContent = duplicateCount;
+        }
+    </script>
+</body>
+</html>
